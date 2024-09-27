@@ -1,0 +1,66 @@
+\begin{thebibliography}{10}
+
+\bibitem{Alcubierre97a}
+M.~Alcubierre.
+\newblock The appearance of coordinate shocks in hyperbolic formulations of
+  general relativity.
+\newblock {\em Phys. Rev. D}, 55:5981--5991, 1997.
+\newblock gr-qc/9609015.
+
+\bibitem{Alcubierre02b}
+M.~Alcubierre.
+\newblock Hyperbolic slicings of spacetime: {S}ingularity avoidance and gauge
+  shocks.
+\newblock {\em Class. Quantum Grav.}, 20:607--624, 2003.
+\newblock gr-qc/0210050.
+
+\bibitem{Alcubierre:2005gw}
+M.~Alcubierre.
+\newblock Are gauge shocks really shocks?
+\newblock 2005.
+\newblock gr-qc/0503030.
+
+\bibitem{Alcubierre99d}
+M.~Alcubierre, B.~Br\"ugmann, T.~Dramlitsch, J.A. Font, P.~Papadopoulos,
+  E.~Seidel, N.~Stergioulas, and R.~Takahashi.
+\newblock Towards a stable numerical evolution of strongly gravitating systems
+  in general relativity: The conformal treatments.
+\newblock {\em Phys. Rev. D}, 62:044034, 2000.
+\newblock gr-qc/0003071.
+
+\bibitem{Arnowitt62}
+R.~Arnowitt, S.~Deser, and C.~W. Misner.
+\newblock The dynamics of general relativity.
+\newblock In L.~Witten, editor, {\em Gravitation: An Introduction to Current
+  Research}, pages 227--265. John Wiley, New York, 1962.
+
+\bibitem{Bona94b}
+C.~Bona, J.~Mass{\'o}, E.~Seidel, and J.~Stela.
+\newblock New formalism for numerical relativity.
+\newblock {\em Phys. Rev. Lett.}, 75:600--603, 1995.
+\newblock gr-qc/9412071.
+
+\bibitem{Leveque92}
+R.~J. Leveque.
+\newblock {\em Numerical Methods for Conservation Laws}.
+\newblock Birkhauser Verlag, Basel, 1992.
+
+\bibitem{Press86}
+W.~H. Press, B.~P. Flannery, S.~A. {T}eukolsky, and W.~T. Vetterling.
+\newblock {\em Numerical Recipes}.
+\newblock Cambridge University Press, Cambridge, England, 1986.
+
+\bibitem{Teukolsky00}
+S.~Teukolsky.
+\newblock On the stability of the iterated {C}rank-{N}icholson method in
+  mumerical relativity.
+\newblock {\em Phys. Rev. D}, 61:087501, 2000.
+\newblock gr-qc/9909026.
+
+\bibitem{York79}
+J.~York.
+\newblock Kinematics and dynamics of general relativity.
+\newblock In L.~Smarr, editor, {\em Sources of Gravitational Radiation}.
+  Cambridge University Press, Cambridge, England, 1979.
+
+\end{thebibliography}

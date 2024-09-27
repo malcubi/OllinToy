@@ -1,0 +1,31 @@
+# Test parameter file:
+#
+# Minkowski, harmonic slicing, no shift, flat boundaries.
+
+dx = 0.1			# grid spacing
+dtfac = 0.5			# Courant parameter
+
+Nx = 200			# Number of grid points
+Nt = 100			# Number of time steps
+
+slicing = harmonic		# Slicing condition (harmonic,1+log,shockavoid,shock0,shock1)
+gauge_f = 1.0			# Coefficient for gauge function f(alpha).
+
+boundtype = outgoing		# Boundary condition (flat,periodic,outgoing)
+
+integrator = icn		# Method for spatial differentiation (icn,rk4)
+method = minmod			# Method for spatial differentiation (upwind,center,minmod,vanleer)
+
+initialdata = lapsegauss	#  Type of initial data (metricgauss,lapsegauss,pureright,pureleft)
+lapsegauss_a0 = 1.0D-1		# Amplitude of gaussian perturbation
+lapsegauss_x0 = 0.0D0		# Center of gaussian perturbation
+lapsegauss_s0 = 1.0D0		# Width of gaussian perturbation
+
+directory = harmonic		# Name of output directory
+Ninfo = 10			# How often do we want to output information to screen?
+Noutput0D = 10			# How often do we want 0D output?
+Noutput1D = 10			# How often do we want 1D output?
+
+outvars0D = alpha,g,Dalpha,Dg,Ktilde,Calpha
+outvars1D = alpha,g,Dalpha,Dg,Ktilde,Calpha
+

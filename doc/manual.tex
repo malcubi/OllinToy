@@ -1,0 +1,1517 @@
+%$Header: /usr/local/ollincvs/Codes/OllinToy/doc/manual.tex,v 1.38 2005/08/10 17:22:50 malcubi Exp $
+
+%-----------------------------------------------------------------------
+%
+% filename = manual.tex
+% 
+%-----------------------------------------------------------------------
+
+\documentclass[12pt]{article}
+
+% Load packages for symbols and figures.
+
+\usepackage{latexsym}
+\usepackage{epsfig}
+
+% Page settings.
+
+\setlength{\textwidth}{16cm}
+\setlength{\oddsidemargin}{0mm}
+\setlength{\evensidemargin}{0mm}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%   BEGIN DOCUMENT   %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+% Reference equations with section number.
+
+\renewcommand{\theequation}{\thesection.\arabic{equation}}
+
+\parindent 0mm
+
+
+%%%%%%%%%%%%%%%%%
+%%%   TITLE   %%%
+%%%%%%%%%%%%%%%%%
+
+\title{Code \texttt{OllinToy}.  User's manual}
+
+\author{Miguel Alcubierre \\
+Instituto de Ciencias Nucleares, UNAM \\
+malcubi@nucleares.unam.mx}
+
+\date{April, 2005}
+
+\maketitle
+
+\tableofcontents
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%   INTRODUCTION   %%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+\pagebreak
+\section{Introduction}
+
+The program \texttt{OllinToy} solves the Einstein evolution equations
+in the case of 1+1 dimensions and in vacuum.  It is well known that in
+this case there are no true dynamics and all the evolution is pure
+gauge.  Still, this is very useful to test gauge conditions. \\
+
+The purpose of the code is therefore to be a platform for both
+studying the effect of some simple gauge conditions, and learning the
+basics of different numerical methods.  The code will then continue to
+grow as we have more ideas to try out, but hopefully it will remain
+manageable, readable and well documented. If you plan on editing the
+code to add some new functionality, have a look at
+Sec.~\ref{sec:editing}. \\
+
+If you find that something is missing from this documentation (or is
+not clear) please let me know.  Some sections ARE missing and I know
+about it, for example I still need to explain how the code tracks
+characteristics, and how the harmonic shift works.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%
+%%%   DIRECTORIES   %%%
+%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Directory structure}
+
+The main directory for the code is \texttt{OllinToy}.  There are several
+subdirectories inside this main directory:
+
+\begin{list}{}{
+\setlength{\leftmargin}{35mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{20mm}}
+
+\item[\texttt{CVS}] Contains information about the CVS root and server (see
+Sec.~\ref{sec:editing}).
+
+\item[\texttt{doc}] Contains the documentation.
+
+\item[\texttt{exe}] Created at compile time and contains the executable file.
+
+\item[\texttt{objs}] Created at compile time and contains all the object files.
+
+\item[\texttt{par}] Contains examples of parameter files (see
+Sec.~\ref{sec:parfiles} below.)
+
+\item[\texttt{prl}] Contains perl scripts used at compile time to create the
+subroutines that manage parameters and arrays.
+
+\item[\texttt{src}] Contains the source files for all the code routines.
+
+\item[\texttt{testdata}] Contains parameter files and data for testsuites.
+
+\end{list}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%   COMPILING AND RUNNING   %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\pagebreak
+
+\section{Compiling and running the code}
+
+The code is written in \texttt{FORTRAN 90}.  All subroutines are in
+separate files inside the subdirectory \texttt{src}.
+
+\subsection{Compiling}
+\label{sec:compiling}
+
+To compile just move inside the \texttt{OllinToy} directory and type: \\
+
+\texttt{gmake} \\
+
+This will create a series of object files for each routine inside the
+subdirectory \texttt{objs}.  The makefile will then create a directory
+\texttt{exe} and will place in it the final executable file called
+\texttt{ollintoy}.  It will also copy to this directory all the parameter
+files inside the subdirectory \texttt{par}. \\
+
+Notice that at this point the code assumes that if you are working on
+a Linux platform you are using the free Intel F90 compiler, and that
+this compiler is called \texttt{ifc}.  If you are working on a Mac,
+the code assumes that you have the IBM compiler and it is called
+\texttt{f90}.  If you have a different compiler then the Makefile will
+have to be modified (hopefully it won't be very difficult).  And if
+you are working on Windows you are on your own (and why on Earth are
+you working on Windows and pretending to use a real code anyway?). \\
+
+The object files and the executable file can be deleted by typing in
+the main directory: \\
+
+\texttt{gmake clean} \\
+
+If one wants to delete only the object files one needs to type: \\
+
+\texttt{gmake cleanobjs} \\
+
+And if one wants to delete the subdirectories \texttt{exe} and
+\texttt{objs} with ALL their contents one can type: \\
+
+\texttt{gmake veryclean} \\
+
+Be VERY careful with this last option, as you will end up deleting all
+your data files if you left them inside the directory \texttt{exe}.
+
+
+\subsection{Running}
+\label{sec:running}
+
+To run the code move into the directory \texttt{exe} and type: \\
+
+\texttt{./ollintoy name.par} \\
+
+Where \texttt{name.par} is the name of your parameter file (more on
+parameter files below).  The code will then read data from the
+parameter file silently and hopefully start producing some output to
+the screen. The code will also create an output directory and will
+write the data files on that directory.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%   PARAMETER FILES   %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Parameter files}
+\label{sec:parfiles}
+
+At runtime, the code reads the parameter values from a parameter file
+(parfile) with a name of the form \texttt{name.par} that must be
+specified in the command line after the executable: \\
+
+\texttt{./ollintoy  name.par} \\
+
+The data in this parameter file can be given in any order, using the
+format: \\
+
+\texttt{parameter = value} \\
+
+Comments (anything after a \texttt{\#}) and blank lines are ignored.
+Only one parameter is allowed per line, and only one value is allowed
+per parameter, with the exception of the parameters \texttt{outvars0D}
+and \texttt{outvars1D} that control which arrays get output and take
+lists of arrays as values, for example: \\
+
+\texttt{outvars0D = alpha,A,B} \\
+
+Parameters that do not appear in the parfile get the default values
+given in the file \texttt{param.f90}.  Example parameter files can be found
+in the subdirectory \texttt{par}.  A list of all currently available parameters
+can be found in Sec.~\ref{sec:parameters}. \\
+
+IMPORTANT: Even though \texttt{FORTRAN} does not distinguish between
+upper and lower case in variable names, the names of parameters are
+handled as strings by the parameter parser, so lower and upper case
+are in fact different.  The name of parameters in the parameter file
+should then be identical to the way in which they appear in the file
+\texttt{param.f90}. \\
+
+Example parameter files can be found in the subdirectory
+\texttt{par}.\\
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%   OUTPUT FILES   %%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Output files}
+
+At runtime, the code creates an output subdirectory whose name should
+be given in the parameter file.  It then produces a series of output
+files with the data from the run.  There are so called ``0D'' files
+(with extension \texttt{*.tl}) and ``1D'' files (with extension
+\texttt{*.xl}). \\
+
+The \texttt{0D} files refer to scalar quantities obtained from the
+spatial arrays as functions of time.  These scalar quantities include
+the maximum (\texttt{max}), the minimum (\texttt{min}) and two
+different norms of the spatial arrays: maximum absolute value
+(\texttt{nm1}) and root mean square (\texttt{nm2}).  The code also
+outputs the total variation (\texttt{var}) of a given variable,
+defined as the sum of the absolute values of the differences between
+adjacent grid points. \\
+
+The \texttt{1D} files contain the complete spatial arrays at different
+times.  Even though the code is only one-dimensional, these files can
+become quite big if you are not careful, so beware. \\
+
+All files are written in ASCII, and using a format adapted to XGRAPH
+(but other graphic packages should be able to read them).\\
+
+Output is controlled by the following parameters:
+
+\begin{list}{}{
+\setlength{\leftmargin}{35mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{20mm}}
+
+\item[\texttt{directory}] Name of directory for output.
+
+\item[\texttt{Ninfo}] How often do we output information to screen?
+
+\item[\texttt{Noutput0D}] How often do we do 0D output?
+
+\item[\texttt{Noutput1D}] How often do we do 1D output?
+
+\item[\texttt{outvars0D}] Arrays that need 0D output (a list separated by commas).
+
+\item[\texttt{outvars1D}] Arrays that need 1D output (a list separated by commas).
+
+\end{list}
+
+
+%%%%%%%%%%%%%%%%%%%%%
+%%%   SPACETIME   %%%
+%%%%%%%%%%%%%%%%%%%%%
+
+\setcounter{equation}{0}
+\section{Spacetime and evolution equations}
+
+The spacetime metric used in the code has the following form:
+\begin{equation}
+ds^2 = \left( - \alpha + g \beta^2 \right) \: dt^2
++ 2 \: g \beta \: dx \: dt + g \: dx^2 \; ,
+\end{equation}
+where $\alpha$ is the lapse function, $\beta \equiv \beta^x$ the
+contravariant shift and $g$ the spatial metric.  \\
+
+As slicing condition the code uses the Bona-Masso family of
+generalized harmonic slicing conditions~\cite{Bona94b}:
+\begin{equation}
+\partial_t \alpha - \beta \: \partial_x \alpha = - \alpha^2 f(\alpha) K \; ,
+\label{eq:BonaMasso}
+\end{equation}
+with $K = K_x^x$ the trace of the extrinsic curvature and $f(\alpha)$
+a positive but otherwise arbitrary function of $\alpha$. \\
+
+The evolution equations used in the code are the
+ADM~\cite{Arnowitt62,York79} equations in 1+1 dimensions, which can be
+written in first order form as
+\begin{eqnarray}
+\partial_t \alpha &=& - \alpha^2 f K + \alpha \beta D_\alpha \; ,
+\label{eq:alphadot} \\
+\partial_t g &=& - 2 \alpha g K + g \beta D_g  + 2 g \: \partial_x \beta \; ,
+\label{eq:gdot}
+\end{eqnarray}
+and
+\begin{eqnarray}
+\partial_t D_\alpha  + \partial_x \left( \alpha f K 
+- \beta D_\alpha \right) &=& 0 \; ,
+\label{weq:Dadot} \\
+\partial_t D_g  + \partial_x \left( 2 \alpha K
+- \beta D_g - 2 \: \partial_x \beta \right) &=& 0 \; ,
+\label{eq:Dgdot} \\
+\partial_t K - \beta \: \partial_x K + \partial_x \left( \alpha D_\alpha /g \right)
+&=& \alpha \left( K^2 - D_\alpha D_g / 2g \right) \; ,
+\label{eq:Kdot}
+\end{eqnarray}
+where we have defined $D_\alpha := \partial_x \ln{\alpha}$ and
+\mbox{$D_g := \partial_x \ln{g}$}. \\
+
+The code in fact does not use $K$ itself, but rather \mbox{$\tilde{K}
+:= g^{1/2} K$}, as with that rescaling of the extrinsic curvature the
+evolution equations for the first order variables $\vec{v}:=(D_\alpha,
+D_g, \tilde{K} )$ can be written as a conservative system of the form
+\begin{equation}
+\partial_t \vec{v} + \partial_x \left( {\bf M} \: \vec{v} \right) =
+2 \left( \partial^2_x \beta \right) \hat{e}_g \; ,
+\label{eq:vdot}
+\end{equation}
+where $\hat{e}_g=(0,1,0)$.  Notice that there is a source term in the
+equation for $D_g$, but this source term is a total derivative, so the
+system is still formally flux conservative (one can always add this
+source to the flux). The characteristic matrix ${\bf M}$ is given by:
+\begin{equation}
+{\bf M} = \left( \begin{array}{ccc}
+- \beta          & 0        & \alpha f / g^{1/2} \\
+0                & - \beta  & 2 \alpha / g^{1/2} \\
+\alpha / g^{1/2} & 0        & - \beta
+\end{array} \right) \; .
+\label{eq:matrixM}
+\end{equation}
+
+The last matrix has the following eigenvalues
+\begin{equation}
+\lambda_0 = - \beta \; , \qquad
+\lambda_\pm = - \beta \pm \alpha \left( f / g \right)^{1/2} \; ,
+\label{eq:eigenvalues}
+\end{equation}
+with corresponding eigenvectors
+\begin{equation}
+\vec{\xi}_0 = \left( 0 , 1 , 0 \right) \; , \qquad
+\vec{\xi}_\pm = \left( f , 2 , \pm f^{1/2} \right) \; .
+\label{eq:eigenvectors}
+\end{equation}
+Since the eigenvalues are real for $f>0$ and the eigenvectors are
+linearly independent, the system~(\ref{eq:vdot}) is strongly
+hyperbolic. \\
+
+The code does not evolve the above equations directly, but rather
+evolves the evolution equations for the ``eigenfields'' which
+are defined as
+\begin{equation}
+\omega_0 = D_\alpha / f - D_g / 2 \; , \qquad
+\omega_\pm = \tilde{K} \pm D_\alpha / f^{1/2} \; .
+\label{eq:eigenfunc}
+\end{equation}
+These equations can be easily inverted to give
+\begin{eqnarray}
+\tilde{K} &=& \frac{\left( \omega_+ + \omega_- \right)}{2} \; , \\
+D_\alpha &=& \frac{f^{1/2} \: \left( \omega_+ - \omega_- \right)}{2} \; , \\
+D_g &=& \frac{\left( \omega_+ - \omega_- \right)}{f^{1/2}} - 2 \omega_0 \; .
+\end{eqnarray}
+
+With the eigenfunctions defined as above, their evolution equations
+also turn out to be conservative and have the simple form:
+\begin{equation}
+\partial_t \vec{\omega}
++ \partial_x \left( {\bf \Lambda} \: \vec{\omega} \right) =
+- 2 \left( \partial^2_x \beta \right) \hat{e}_{w_0} \: ,
+\label{eq:omegadot}
+\end{equation}
+with ${\bf \Lambda} = {\rm diag} \left\{ \lambda_0, \lambda_+,
+\lambda_- \right\}$, $\vec{\omega}=(\omega_0, \omega_+, \omega_-)$ and
+$\hat{e}_{w_0}=(1,0,0)$. These are the actual equations coded. \\
+
+The evolution equations for the original variables can later be easily
+recovered from (\mbox{$f' := d f / d \alpha$}):
+\begin{eqnarray}
+\partial_t \tilde{K} &=& \frac{1}{2} \: \left( \partial_t \omega_+
++ \partial_t \omega_- \right) \; , \\
+\partial_t D_\alpha &=& \frac{f^{1/2}}{2} \: \left( \partial_t \omega_+
+- \partial_t \omega_- \right) + \frac{f'}{2 f} \: D_\alpha \: \partial_t \alpha \; , \\
+\partial_t D_g &=& \frac{1}{f^{1/2}} \: \left( \partial_t \omega_+
+- \partial_t \omega_- \right)  - 2 \: \partial_t \omega_0
+- \frac{f'}{f^2} \: D_\alpha \: \partial_t \alpha \; .
+\end{eqnarray}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%   SLICING CONDITION   %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\setcounter{equation}{0}
+\section{Slicing condition}
+\label{sec:slicing}
+
+As mentioned above, the slicing condition used in the code is the
+Bona-Masso condition
+\begin{equation}
+\partial_t \alpha - \beta \: \partial_x \alpha = - \alpha^2 f(\alpha) K \; ,
+\end{equation}
+with $f>0$. \\
+
+Two parameters control the choice of the function $f(\alpha)$:
+``slicing'' and ``gauge\_f''.  The parameter ``gauge\_f'' is a real
+constant, and the parameter ``slicing'' is a character type parameter
+that can have one of the following values:
+
+\begin{itemize}
+
+\item \texttt{slicing = harmonic}. Harmonic type slicing:
+\[f = {\rm gauge\_f} \; .\]
+
+\item \texttt{slicing  =  1+log}. 1+log type slicing:
+\[f = {\rm gauge\_f} / \alpha \; . \]
+
+\item \texttt{slicing = shockavoid}. Shock avoiding family:
+\[f = 1 + {\rm gauge\_f}/\alpha^2 \; . \]
+
+\item \texttt{slicing = shock0}. Zero order shock avoiding family:
+\[f = {\rm gauge\_f}^2 / \left[ \left( 2 - {\rm gauge\_f} \right)
++ 2 \alpha \left( {\rm gauge\_f} - 1 \right) \right] \; . \]
+
+\item \texttt{slicing = shock1}. First order shock avoiding family:
+\[f = {\rm gauge\_f} / \left\{ \left( 4 - 3 {\rm gauge\_f} \right)
++ \alpha \left( 1 - {\rm gauge\_f} \right) \left[ \alpha \left( 4 - {\rm gauge_f}
+\right) -8 \right] \right\} \; . \]
+
+\end{itemize}
+
+The last three cases avoid gauge shocks to different degrees.  To see
+exactly what a gauge shock is and what the different shock avoiding
+families do see~\cite{Alcubierre97a,Alcubierre02b,Alcubierre:2005gw}. \\
+
+Notice also that in the case when we chose \texttt{slicing=harmonic}
+(that is, constant $f$), and we also choose initial data corresponding
+to waves traveling only in one direction (see Sec.~\ref{sec:initial}),
+then one can in fact predict the time when a gauge shock is expected.
+In this case the code outputs the predicted shock formation time to
+the screen immediately after computing the initial data.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%   SHIFT CONDITION   %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\setcounter{equation}{0}
+\section{Shift condition}
+\label{sec:shift}
+
+The shift conditions supported by the code are controlled by the
+parameter {\texttt{shift}}.  The allowed values are:
+
+\begin{itemize}
+
+\item \texttt{shift = none}. This means that the shift arrays do not
+even have storage, and the shift terms are not calculated.  This is
+the default.
+
+\item \texttt{shift = zero}. In this case the shift exists, but it is
+set equal to zero.  The arrays have storage and the shift terms are
+calculated, but they should all vanish.
+
+\item \texttt{shift = constant}.  In this case the shift is simply a
+constant given by the value of the real parameter \texttt{beta0}.
+
+\item \texttt{shift = static}.  In this case the shift is left
+equal to its initial profile, which might be non-trivial.
+
+\item \texttt{shift = harmonic}.  Generalized harmonic shift.  Not yet
+fully implemented.  A detailed explanation will come later.
+
+\end{itemize}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%   BOUNDARY CONDITIONS   %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\setcounter{equation}{0}
+\section{Boundary conditions}
+\label{sec:boundary}
+
+The different boundary conditions in the code are controlled by the
+character type parameter \texttt{boundtype}.  Notice that
+the metric variables $\{\alpha,g\}$ do not need a boundary condition,
+as they evolve only through source terms and can then be updated all
+the way to the boundaries.  Boundary conditions are only needed for
+the variables that have non-trivial fluxes. \\
+
+The different possibilities are:
+
+\begin{itemize}
+
+\item \texttt{boundtype = flat}. In this case the boundary value is
+copied from one point in.  This is a very simple boundary condition,
+but it is not very good.  I keep it only because it is so simple.
+
+\item \texttt{boundtype = periodic}.  Periodic boundary conditions.
+They are implemented by making the value on the last point on one side
+equal to the value on the second point on the other side for all
+variables.
+
+\item \texttt{boundtype = outgoing}.  This is simple, just don't touch
+outgoing modes and set the sources for incoming modes equal to zero.
+Notice that this is only so simple when one is evolving the
+eigenfields directly.
+
+\item \texttt{boundtype = reflectplus}.  Here we just set the incoming
+field at a given boundary equal to the outgoing field.
+
+\item \texttt{boundtype = reflectminus}.  Save as above, but with a
+minus sign.
+
+\end{itemize}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%
+%%%   CONSTRAINTS   %%%
+%%%%%%%%%%%%%%%%%%%%%%%
+
+\setcounter{equation}{0}
+\section{Constraints}
+\label{sec:constraints}
+
+The code monitors the constraints associated with the definition of
+derivative quantities:
+\begin{eqnarray}
+C_\alpha  &:=&  D_\alpha  -  \partial_x \ln{\alpha} \; , \\
+C_g  &:=&  D_g  -  \partial_x \ln{g} \; , \\
+C_\sigma &:=& D_\sigma - \partial_x \sigma \; .
+\end{eqnarray}
+
+The values of the constraint variables can be output if desired.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%   INITIAL DATA   %%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+\setcounter{equation}{0}
+\section{Initial data}
+\label{sec:initial}
+
+Initial data is controlled through the character type parameter
+\texttt{initialdata}.  The different types of initial data are:
+
+\begin{itemize}
+
+\item \texttt{initialdata = metricgauss}
+
+In this case we take a trivial initial slice and an initial lapse of
+1, but we use non-trivial spatial coordinates.  The spatial metric is
+obtained from a simple transformation from Minkowski coordinates:
+\begin{equation}
+x_M = x + f(x)
+\end{equation}
+The metric then takes the form:
+\begin{equation}
+g = (1 + df/dx)^2
+\end{equation}
+The function $f(x)$ is taken to be a simple gaussian controlled by the
+parameters:
+
+\begin{list}{}{
+\setlength{\leftmargin}{35mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{20mm}}
+
+\item[\texttt{metricgauss\_a0} (real)] Amplitude of gaussian.
+
+\item[\texttt{metricgauss\_x0} (real)] Center of gaussian.
+
+\item[\texttt{metricgauss\_s0} (real)] Width of gaussian.
+
+\end{list}
+
+For this initial data we only expect evolution caused by the presence
+of a non-zero shift.
+
+
+\item \texttt{initialdata = lapsegauss}.
+
+This case corresponds to an initially trivial slice in Minkowski
+coordinates with a gaussian initial lapse of the form
+\begin{equation}
+\alpha = 1 + A \exp \left[ - \left( x - x0 \right)^2 / \sigma^2 \right] \; .
+\end{equation}
+This gaussian is controlled by the parameters:
+
+\begin{list}{}{
+\setlength{\leftmargin}{35mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{20mm}}
+
+\item[\texttt{lapsegauss\_a0} (real)] Amplitude of gaussian.
+
+\item[\texttt{lapsegauss\_x0} (real)] Center of gaussian.
+
+\item[\texttt{lapsegauss\_s0} (real)] Width of gaussian.
+
+\end{list}
+
+This initial data inevitably has contributions from waves
+traveling in both directions.
+
+
+\item \texttt{initialdata = shiftgauss}.
+
+This case corresponds to an initially trivial slice in Minkowski
+coordinates with a gaussian initial shift of the form
+\begin{equation}
+\beta = 1 + A \exp \left[ - \left( x - x0 \right)^2 / \sigma^2 \right] \; .
+\end{equation}
+
+This will act as a source term for the evolution of the metric,
+but the lapse and extrinsic curvature will remain trivial.
+The gaussian is controlled by the parameters:
+
+\begin{list}{}{
+\setlength{\leftmargin}{35mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{20mm}}
+
+\item[\texttt{shiftgauss\_a0} (real)] Amplitude of gaussian.
+
+\item[\texttt{shiftgauss\_x0} (real)] Center of gaussian.
+
+\item[\texttt{shiftgauss\_s0} (real)] Width of gaussian.
+
+\end{list}
+
+
+\item \texttt{initialdata = pureright}.
+
+This correspond to a pulse traveling only to the right. Notice that
+this implies that we can no longer start with a trivial slice.  Also,
+this option can only be used for $f(\alpha)$ = constant.\\
+
+The idea here is to take a non-trivial given in Minkowski
+coordinates $(t_M,x_M)$ as
+\begin{equation}
+t_M = h(x_M) \: ,
+\end{equation}
+with $h$ a profile function that decays rapidly.  It is then not
+difficult to show that if we use $x=x_M$ as our spatial coordinate,
+the spatial metric an extrinsic curvature are
+\begin{eqnarray}
+g &=& 1 - h'^2 \quad \Rightarrow \quad D_g = -2 h' h'' / g \: , \\
+\qquad K &=& - h'' / g^{3/2} \quad \Rightarrow \quad \tilde{K} = - h''
+/ g \; .
+\end{eqnarray}
+Assume now that we want to have only waves traveling to the right,
+this means that we want $\omega_-=0$, which implies:
+\begin{equation}
+D_\alpha = \sqrt{f} \: \tilde{K} = - \sqrt{f} \: h'' / g \; .
+\end{equation}
+The above equation gives us a differential equation for $\alpha$.
+In the particular case when $f$ is a constant the equation can
+be easily integrated to find
+\begin{equation}
+\alpha = \left( \frac{1 - h'}{1 + h'} \right)^{\sqrt{f}/2} \; .
+\end{equation}
+See~\cite{Alcubierre:2005gw} for more details. Notice that in this
+case the code takes the function $h(x)$ to be a gaussian controlled by
+the same parameters:
+
+\begin{list}{}{
+\setlength{\leftmargin}{35mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{20mm}}
+
+\item[\texttt{pulsegauss\_a0} (real)] Amplitude of gaussian.
+
+\item[\texttt{pulsegauss\_x0} (real)] Center of gaussian.
+
+\item[\texttt{pulsegauss\_s0} (real)] Width of gaussian.
+
+\end{list}
+
+
+\item \texttt{initialdata = pureleft}.
+
+This is just the same as the last case, but for pulses traveling to
+the left.  The construction of the initial data is the same except for
+a change in the sign of $D_\alpha$, and a corresponding change in
+$\alpha$.
+
+\end{itemize}
+
+
+%%%%%%%%%%%%%%%%%%%%%
+%%%   OBSERVERS   %%%
+%%%%%%%%%%%%%%%%%%%%%
+
+\setcounter{equation}{0}
+\section{Tracking observers}
+\label{sec:observers}
+
+The code tracks the Minkowski coordinates of the coordinate observers
+if the logical parameter \texttt{trackobs} is set to \texttt{.true.}
+in the parfile: \\
+
+\texttt{trackobs = .true.} \\
+
+This is done through the arrays \texttt{xm} and \texttt{tm} which
+contain the Minkowski position in both space and time of these
+observers.  The Minkowski position of the observers is initialized in
+a way that is appropriate to the type of initial data chosen (see
+Section~\ref{sec:initial} for a description of how the code chooses
+initial data). \\
+
+In order to update the position of the observers, once the geometric
+variables have been updated the code calculates the proper distances
+$d_l$ and $d_r$ from the grid point under consideration to the grid
+points immediately to the left and right in the previous time level
+(see Figure~\ref{fig:minkowski}).  This can be easily done as we know
+the full spacetime metric at all grid points and we can simply
+interpolate. \\
+
+\begin{figure}
+\begin{center}
+\begin{picture}(200,80)(0,-10)
+\put(0,0){\circle{10}}
+\put(50,0){\circle*{10}}
+\put(100,0){\circle{10}}
+\put(150,0){\circle*{10}}
+\put(200,0){\circle{10}}
+\put(0,50){\circle{10}}
+\put(50,50){\circle{10}}
+\put(100,50){\circle*{10}}
+\put(150,50){\circle{10}}
+\put(200,50){\circle{10}}
+\put(50,0){\vector(1,1){45}}
+\put(150,0){\vector(-1,1){45}}
+\put(60,25){$d_l$}
+\put(140,25){$d_r$}
+\put(230,-4){$t - \Delta t$}
+\put(230,47){$t$}
+\end{picture}
+\end{center}
+\caption{Grid points used to find Minkowski coordinates of observers.}
+\label{fig:minkowski}
+\end{figure}
+
+Once these distances are known, and assuming we know the positions in
+Minkowski spacetime of all grid points in the old time level, the
+Minkowski coordinates of the point in the new time level can be
+obtained by solving the following system of equations for $(t_M(t,x),
+x_M(t,x))$:
+\begin{eqnarray}
+d_l^2 &=&  \left[ x_M(t-\Delta t,x-\Delta x) - x_M(t,x) \right]^2 
+- \left[ t_M(t-\Delta t,x-\Delta x) - t_M(t,x) \right]^2 \: , \\
+d_r^2 &=&  \left[ x_M(t-\Delta t,x+\Delta x) - x_M(t,x) \right]^2 
+- \left[ t_M(t-\Delta t,x+\Delta x) - t_M(t,x) \right]^2 \: . \hspace{10mm} 
+\end{eqnarray}
+This system of equations is non-linear, and to solve it the code uses
+Newton-Raphson iterations.  Notice that since the equations are
+quadratic there are two possible solutions, one in the past and one
+in the future.  In order to obtain the solution in the future we
+simply take the following initial guess for the Newton-Raphson
+iterations:
+\begin{equation}
+t_M(t,x) = t_M(t-\Delta t,x) + \Delta t \; , \qquad
+x_M(t,x) = x_M(t-\Delta t,x) \; .
+\end{equation}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%   CHARACTERISTICS   %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\setcounter{equation}{0}
+\section{Tracking characteristics}
+\label{sec:characteristics}
+
+The code tracks a characteristic scalar if the logical parameter
+\texttt{trackchar} is set to \texttt{.true.} in the parfile: \\
+
+\texttt{trackchar = .true.} \\
+
+How is this done? ...
+
+
+%%%%%%%%%%%%%%%%
+%%%   GRID   %%%
+%%%%%%%%%%%%%%%%
+
+\setcounter{equation}{0}
+\section{Numerical grid}
+\label{sec:grid}
+
+The finite differencing grid is a simple uniform 1D grid.  The
+parameters associated with the grid are:
+
+\begin{list}{}{
+\setlength{\leftmargin}{25mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{15mm}}
+
+\item[\texttt{dx}] Grid spacing.
+
+\item[\texttt{Nx}] Number of grid points.
+
+\end{list}
+
+The code takes half the grid points to be on the negative side of the
+origin an half on the positive side.  If ``Nx'' is even there will be a
+point on the origin, while if it is odd we stagger the origin. \\
+
+For the time stepping we have the following parameters:
+
+\begin{list}{}{
+\setlength{\leftmargin}{25mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{15mm}}
+
+\item[\texttt{dtfac}] Courant parameter (dtfac=dt/dx).
+
+\item[\texttt{Nt}] Total number of time steps.
+
+\end{list}
+
+Notice that the time step \texttt{dt} is NOT a parameter, but is
+rather a derived quantity computed inside the code as: \texttt{dt =
+dtfac $\times$ dx}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%   NUMERICAL METHODS   %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\setcounter{equation}{0}
+\section{Numerical methods}
+\label{sec:numerics}
+
+For the time integration the code uses a method of lines, where the
+time integration and spatial differentiation are considered
+independent of each other. \\
+
+The time integrator is controlled by the character type parameter
+\texttt{integrator}:
+
+\begin{itemize}
+
+\item \texttt{integrator = icn}. This is 3-step
+iterative-Crank-Nicholson.  For a reference of this integration method
+see Appendix A of~\cite{Alcubierre99d} and also~\cite{Teukolsky00}.
+
+\item \texttt{integrator = rk4}. This is standard fourth order
+Runge-Kutta, see~\cite{Press86}.
+
+\end{itemize}
+
+The spatial differentiation is controlled by the character type
+parameter \texttt{method}:
+
+\begin{itemize}
+
+\item \texttt{method = upwind}. Upwinded differences (first order).
+
+\item \texttt{method = center}. Standard centered differences (second order).
+
+\item \texttt{method = minmod}. Minmod type slope limiter (second order).
+
+\item \texttt{method = vanleer}. Van Leer type slope limiter (second order).
+
+\end{itemize}
+
+Notice that the sources are always calculated for the eigenfields
+first, the sources for the primary fields ($D_\alpha$, $D_g$,
+$\tilde{K}$) are later reconstructed from these.  The upwind and slope
+limiter methods are therefore well defined.  For more details on these
+methods see~\cite{Leveque92}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%   LIST OF PARAMETERS   %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{List of all currently available parameters}
+\label{sec:parameters}
+
+Here is a list of all currently available parameters with their
+default values and ranges when applicable.
+
+\begin{itemize}
+
+\item Grid parameters:
+
+\begin{list}{}{
+\setlength{\leftmargin}{60mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{50mm}}
+
+\item[\texttt{dx (real(8))}] Spatial interval (default 1.0).
+
+\item[\texttt{Nx (integer)}] Total number of grid points (default 10). 
+
+\end{list}
+
+\item Time stepping parameters:
+
+\begin{list}{}{
+\setlength{\leftmargin}{60mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{50mm}}
+
+\item[\texttt{dtfac (real(8))}] Courant parameter dt/dx (default 0.5).
+
+\item[\texttt{Nt (integer)}] Total number of time steps (default 10).
+
+\end{list}
+
+\item Output parameters:
+
+\begin{list}{}{
+\setlength{\leftmargin}{60mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{50mm}}
+
+\item[\texttt{directory (character)}]  Name of output directory (default \texttt{output}).
+
+\item[\texttt{Ninfo (integer)}] Frequency of output to screen (default 1).
+
+\item[\texttt{Noutput0D (integer)}] Frequency of 0D output (default 1).
+
+\item[\texttt{Noutput1D (integer)}] Frequency of 1D output (default 1).
+
+\item[\texttt{outvars0D (character)}] Comma separated lists of
+variables that need 0D output (default \texttt{alpha}).
+
+\item[\texttt{outvars1D (character)}] Comma separated lists of
+variables that need 1D output (default \texttt{alpha}).
+
+\item[\texttt{commentype (character)}] Type of comment lines used on the
+output files \linebreak (range = \{\texttt{xgraph}, \texttt{gnuplot}\}, default
+\texttt{xgraph}).
+
+\item[\texttt{outtype (character)}] Type of output (range =
+\{\texttt{standard}, \texttt{test}\}, default \texttt{standard}).  The
+\texttt{test} type output is only used for the testsuites and is
+designed to minimize as much as possible the round-off errors on
+output.
+
+\end{list}
+
+
+\item Slicing parameters:
+
+\begin{list}{}{
+\setlength{\leftmargin}{60mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{50mm}}
+
+\item[\texttt{slicing (character)}] Type of slicing condition (range =
+\{\texttt{harmonic}, \texttt{1+log}, \texttt{shockavoid},
+\texttt{shock0}, \texttt{shock1}\}, default \texttt{harmonic}).
+
+\item[\texttt{gauge\_f (real(8))}] Coefficient used in slicing
+condition (default 1).
+
+\end{list}
+
+
+\item Shift parameters:
+
+\begin{list}{}{
+\setlength{\leftmargin}{60mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{50mm}}
+
+\item[\texttt{shift (character)}] Type of shift condition (range =
+\{\texttt{none}, \texttt{zero}, \texttt{constant}, \texttt{static},
+\texttt{harmonic}\}, default \texttt{none}).
+
+\item[\texttt{beta0 (real)}] Constant value of shift for the case
+\texttt{shift = constant}.
+
+\item[\texttt{gauge\_h (real)}] Gauge coefficient for harmonic shift.
+
+\end{list}
+
+
+\item Initial data parameters:
+
+\begin{list}{}{
+\setlength{\leftmargin}{60mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{55mm}}
+
+\item[\texttt{initialdata (character)}] Type of initial data (range =
+\{\texttt{metricgauss}, \texttt{lapsegauss}, \texttt{shiftgauss},
+\texttt{pureright}, \texttt{pureleft}\}, default \texttt{lapsegauss}).
+
+\item[\texttt{lapsegauss\_a0 (real(8))}] Amplitude of gaussian
+for lapsegauss (default 0).
+
+\item[\texttt{lapsegauss\_x0 (real(8))}] Center of gaussian for
+lapsegauss (default 0).
+
+\item[\texttt{lapsegauss\_s0 (real(8))}] Width of gaussian for
+lapsegauss (default 1).
+
+\item[\texttt{shiftgauss\_a0 (real(8))}] Amplitude of gaussian
+for shiftgauss (default 0).
+
+\item[\texttt{shiftgauss\_x0 (real(8))}] Center of gaussian for
+shiftgauss (default 0).
+
+\item[\texttt{shiftgauss\_s0 (real(8))}] Width of gaussian for
+shiftgauss (default 1).
+
+\item[\texttt{metricgauss\_a0 (real(8))}] Amplitude of gaussian
+for metricgauss (default 0).
+
+\item[\texttt{metricgauss\_x0 (real(8))}] Center of gaussian for
+metricgauss (default 0).
+
+\item[\texttt{metricgauss\_s0 (real(8))}] Width of gaussian for
+metricgauss (default 1).
+
+\item[\texttt{pulsegauss\_a0 (real(8))}] Amplitude of gaussian
+for pureright and pureleft \linebreak (default 0).
+
+\item[\texttt{pulsegauss\_x0 (real(8))}] Center of gaussian for
+pureright and pureleft \linebreak (default 0).
+
+\item[\texttt{pulsegauss\_s0 (real(8))}] Width of gaussian for
+pureright and pureleft \linebreak (default 1).
+
+\end{list}
+
+
+\item Evolution parameters:
+
+\begin{list}{}{
+\setlength{\leftmargin}{60mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{50mm}}
+
+\item[\texttt{integrator (character)}] Time integration scheme (range =
+\{\texttt{icn}, \texttt{rk4}\}, \linebreak default \texttt{icn}).
+
+\item[\texttt{method (character)}] Spatial differencing method (range =
+\{\texttt{upwind}, \\ \texttt{center}, \texttt{minmod}, \texttt{vanleer}\},
+default \texttt{center}).
+
+\end{list}
+
+
+\item Boundary parameters:
+
+\begin{list}{}{
+\setlength{\leftmargin}{60mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{50mm}}
+
+\item[\texttt{boundtype (character)}] Type of boundary condition
+(range = \{\texttt{flat}, \linebreak \texttt{periodic},
+\texttt{outgoing}, \texttt{reflectplus}, \texttt{reflectminus}\},
+default \texttt{outgoing}).
+
+\end{list}
+
+
+\item Parameters to track observers:
+
+\begin{list}{}{
+\setlength{\leftmargin}{60mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{50mm}}
+
+\item[\texttt{trackobs (logical)}] Do we track observers?
+(default \texttt{.false.}).
+
+\end{list}
+
+
+\item Parameters to track characteristics:
+
+\begin{list}{}{
+\setlength{\leftmargin}{60mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{50mm}}
+
+\item[\texttt{trackchar (logical)}] Do we track characteristics?
+(default \texttt{.false.}).
+
+\end{list}
+
+\end{itemize}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%   LIST OF ARRAYS   %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{List of all currently available arrays}
+\label{sec:arrays}
+
+Here is a list of all currently available arrays.  All arrays extend
+from 0 to $Nx$ (they have $Nx+1$ points). Notice that half the grid
+points are on the negative side of the origin: If $Nx$ is even, we
+will have a point on the origin, while if it is odd we stagger the
+origin.
+
+\begin{itemize}
+
+\item Arrays related to coordinates:
+
+\begin{list}{}{
+\setlength{\leftmargin}{25mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{30mm}}
+
+\item[\texttt{x}] Spatial coordinate of grid points.
+
+\item[\texttt{xm}] Spatial Minkowski coordinate of observers.
+
+\item[\texttt{xm\_p}] Spatial Minkowski coordinate of observers
+at past time level.
+
+\item[\texttt{tm}] Temporal Minkowski coordinate of observers.
+
+\item[\texttt{tm\_p}] Temporal Minkowski coordinate of observers at
+past time level.
+
+\end{list}
+
+
+\item Arrays related to slicing:
+
+\begin{list}{}{
+\setlength{\leftmargin}{25mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{30mm}}
+
+\item[\texttt{alpha}] Lapse function.
+
+\item[\texttt{alpha\_p}] Lapse function at past time level.
+
+\item[\texttt{salpha}] Source term for lapse.
+
+\item[\texttt{alpha\_a}] Auxiliary array for lapse.
+
+\item[\texttt{Dalpha}] Logarithmic derivative of lapse: $d\ln \alpha /dx$.
+
+\item[\texttt{Dalpha\_p}] Logarithmic derivative of lapse at past time level.
+
+\item[\texttt{sDalpha}] Source term for logarithmic derivative of lapse.
+
+\item[\texttt{Dalpha\_a}] Auxiliary array for logarithmic derivative of lapse.
+
+\item[\texttt{f}] Bona-Masso gauge function: $f(\alpha)$.
+
+\item[\texttt{fp}] Derivative of Bona-Masso gauge function: $df/d\alpha$.
+
+\end{list}
+
+
+\item Arrays related to the shift:
+
+\begin{list}{}{
+\setlength{\leftmargin}{25mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{30mm}}
+
+\item[\texttt{beta}] Shift.
+
+\item[\texttt{beta\_p}] Shift at past time level.
+
+\item[\texttt{Dbeta}] Derivative of shift ($D_\beta = d \beta / dx$).
+
+\item[\texttt{sigma}] Rescaled shift ($\beta = \alpha \sigma$).
+
+\item[\texttt{sigma\_p}] Rescaled shift at past time level.
+
+\item[\texttt{ssigma}] Source term for rescaled shift.
+
+\item[\texttt{sigma\_a}] Auxiliary array for rescaled shift.
+
+\item[\texttt{Dsigma}] Derivative of rescaled shift ($D_\sigma = d \sigma / dx$).
+
+\item[\texttt{Dsigma\_p}] Derivative of rescaled shift at past time level.
+
+\item[\texttt{sDsigma}] Source term for derivative of rescaled shift.
+
+\item[\texttt{Dsigma\_a}] Auxiliary array for derivative of rescaled shift.
+
+\item[\texttt{h}] Shift gauge function $h(\alpha)$.
+
+\item[\texttt{hp}] Derivative of shift gauge function $h_p = dh/d\alpha$.
+
+\end{list}
+
+
+\item Arrays related to spatial metric:
+
+\begin{list}{}{
+\setlength{\leftmargin}{25mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{30mm}}
+
+\item[\texttt{g}] Spatial metric function: $g := g_{xx}$.
+
+\item[\texttt{g\_p}] Spatial metric at past time level.
+
+\item[\texttt{sg}] Source term for spatial metric.
+
+\item[\texttt{g\_a}] Auxiliary array for spatial metric.
+
+\item[\texttt{Dg}] Logarithmic derivative of spatial metric: $d\ln g /dx$.
+
+\item[\texttt{Dg\_p}] Logarithmic derivative of metric at past time level.
+
+\item[\texttt{sDg}] Source term for logarithmic derivative of metric.
+
+\item[\texttt{Dg\_a}] Auxiliary array for logarithmic derivative of metric.
+
+\end{list}
+
+
+\item Arrays related to extrinsic curvature:
+
+\begin{list}{}{
+\setlength{\leftmargin}{25mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{30mm}}
+
+\item[\texttt{trK}] Trace of extrinsic curvature: ${\rm tr} K :=
+K_{xx}/g_{xx}$ (analysis).
+
+\item[\texttt{Ktilde}] Densitized extrinsic curvature: $\tilde{K} :=
+\sqrt{g} \; {\rm tr} K$.
+
+\item[\texttt{Ktilde\_p}] Densitized extrinsic curvature at past time level.
+
+\item[\texttt{sKtilde}] Source term for densitized extrinsic curvature.
+
+\item[\texttt{Ktilde\_a}] Auxiliary array for densitized extrinsic curvature.
+
+\end{list}
+
+
+\item Arrays related to eigenfields:
+
+\begin{list}{}{
+\setlength{\leftmargin}{25mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{30mm}}
+
+\item[\texttt{lambda0}] Time-line eigenspeed: $\lambda_0 := - \beta$.
+
+\item[\texttt{lambdafp}] Plus slicing eigenspeed: $\lambda^f_+ := -
+\beta + \alpha \sqrt{f/g}$.
+
+\item[\texttt{lambdafm}] Minus slicing eigenspeed: $\lambda^f_- := -
+\beta - \alpha \sqrt{f/g}$.
+
+\item[\texttt{lambdahp}] Plus shift eigenspeed: $\lambda^h_+ := -
+\beta + \alpha \sqrt{h/g}$.
+
+\item[\texttt{lambdahm}] Minus shift eigenspeed: $\lambda^h_- := -
+\beta - \alpha \sqrt{h/g}$.
+
+\item[\texttt{W0}] Time-line eigenfield: $\omega_0
+:= D_\alpha / f - D_g / 2$.
+
+\item[\texttt{sW0}] Source term for time-line eigenfield.
+
+\item[\texttt{Wfp}] Right propagating slicing eigenfield: $\omega^f_+
+:= \tilde{K} + D_\alpha / \sqrt{f}$.
+
+\item[\texttt{sWfp}] Source term for right propagating slicing
+eigenfield.
+
+\item[\texttt{Wfm}] Left propagating slicing eigenfield: $\omega^f_-
+:= \tilde{K} - D_\alpha / \sqrt{f}$.
+
+\item[\texttt{sWfm}] Source term for left propagating slicing
+eigenfield.
+
+\item[\texttt{Whp}] Right propagating shift eigenfield: $\omega^h_+
+:= (1/\sqrt{g h} + \sigma) \tilde{K} + D_g / (2 \sqrt{g}) - D_\sigma / \sqrt{h}$.
+
+\item[\texttt{sWhp}] Source term for right propagating shift
+eigenfield.
+
+\item[\texttt{Whm}] Left propagating shift eigenfield: $\omega^h_-
+:= (1/\sqrt{g h} - \sigma) \tilde{K} - D_g / (2 \sqrt{g}) - D_\sigma / \sqrt{h}$.
+
+\item[\texttt{sWhm}] Source term for left propagating shift
+eigenfield.
+
+\end{list}
+
+
+\item Arrays related to characteristics:
+
+\begin{list}{}{
+\setlength{\leftmargin}{25mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{30mm}}
+
+\item[\texttt{char0}] Time line characteristic scalar.
+
+\item[\texttt{char0\_p}] Time line characteristic scalar at past time level.
+
+\item[\texttt{schar0}] Time line for right propagating characteristic scalar.
+
+\item[\texttt{charp}] Right propagating characteristic scalar.
+
+\item[\texttt{charp\_p}] Right propagating characteristic scalar at past time level.
+
+\item[\texttt{scharp}] Source term for right propagating characteristic scalar.
+
+\item[\texttt{charm}] Left propagating characteristic scalar.
+
+\item[\texttt{charm\_p}] Left propagating characteristic scalar at past time level.
+
+\item[\texttt{scharm}] Source term for left propagating characteristic scalar.
+
+\item[\texttt{Dchar0}] Inverse derivative of time line scalar:
+$(d \: {\rm charp} / dx)^{-1}$.
+
+\item[\texttt{Dcharp}] Inverse derivative of right propagating scalar:
+$(d \: {\rm charp} / dx)^{-1}$.
+
+\item[\texttt{Dcharm}] Inverse derivative of left propagating scalar:
+$(d \: {\rm charm} / dx)^{-1}$.
+
+\end{list}
+
+\item Arrays related to constraints:
+
+\begin{list}{}{
+\setlength{\leftmargin}{25mm}
+\setlength{\labelsep}{10mm}
+\setlength{\labelwidth}{30mm}}
+
+\item[\texttt{Calpha}] Constraint: $C_\alpha := D_\alpha - d \ln \alpha / dx$.
+
+\item[\texttt{Cg}] Constraint: $C_g := D_g - d \ln g / dx$.
+
+\item[\texttt{Csigma}] Constraint: $C_\sigma := D_\sigma - d \sigma / dx$.
+
+\end{list}
+
+\end{itemize}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%   EDITING THE CODE   %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Editing the code}
+\label{sec:editing}
+
+If you are planning to edit the code and add your own new parameters,
+arrays or routines, here are some details you should know:
+
+\subsection{Adding parameters}
+
+All parameters for the code should be declared in the file
+{\texttt{src/param.f90}, using a very specific format: \\
+
+\texttt{type :: name = value} \\
+
+Here \texttt{type} can be any of the standard \texttt{FORTRAN}
+variable types (\texttt{logical}, \texttt{integer}, \texttt{real},
+\texttt{character}), \texttt{name} is the name of the parameter, and
+\texttt{value} is a default initial value that makes some sense for
+the code.  All parameters must have a default value, otherwise the
+code will not compile. Only one parameter can be declared per line,
+since this file will be read at compilation time by a perl script that
+expects that structure. \\
+
+The following variations are permitted when declaring a parameter:
+Character type parameters that are allowed to receive multiple values
+at the same time (separated by commas) should be declared as:
+
+\begin{verbatim}
+character :: name = value     ! multiple
+\end{verbatim}}
+
+Also, a range can be defined for character type parameters as:
+
+\begin{verbatim}
+character :: name = value     ! range = (value1,value2,...,valueN)
+\end{verbatim}
+
+The range is not compulsory (but it is a good idea), if it is not
+there then any value is allowed.
+
+
+\subsection{Adding arrays}
+
+Since this is a 1D code, it works with a series of 1D arrays that have
+all the dynamical and analysis variables. All arrays must be declared
+in the file \texttt{src/arrays.f90}, using a very specific format:
+
+\begin{verbatim}
+real(8), allocatable, dimension (:) :: arrayname
+\end{verbatim}
+
+Only one array can be declared per line, since this file will be read
+at compilation time by a perl script that expects this structure. \\
+
+One can also add control information at the end of a declaration as a
+comment.  For example, an array can be declared for ``analysis'' in
+the following form:
+
+\begin{verbatim}
+real(8), allocatable, dimension (:) :: arrayname     ! analysis
+\end{verbatim}
+
+This is then interpreted as an array that will only need memory
+allocated if one wants output for it. \\
+
+In the same way, one can add a conditional statement that will control
+when memory is allocated.  For example:
+
+\begin{verbatim}
+real(8), allocatable, dimension (:) ::  varname   ! if (expression)
+\end{verbatim}
+
+Here ``expression'' must be a correctly formulated Fortran logical
+expression involving the value of some parameter the code knows about.
+
+
+\subsection{Adding routines}
+
+Routines should be added directly in the subdirectory \texttt{src}
+with the extension \texttt{.f90}.  There is no need to modify the
+Makefile, as it will automatically compile and link all files it finds
+with that extension. \\
+
+Since all the parameters and arrays are declared in the F90 module
+files \texttt{param.f90} and \texttt{arrays.f90}, if you want your
+routine to see them you need to add the following two lines
+immediately after the name of the routine (before declaring any
+variables):
+
+\begin{verbatim}
+use param
+use arrays
+\end{verbatim}
+
+
+\subsection{Testsuites}
+
+The code has a series of testsuites already prepared in the
+subdirectory \texttt{testdata}.  Whenever the code is edited it is a
+good idea to check that the tests still pass, which would mean that
+nothing has been broken by the new routines. To run the testsuites
+simply go to the main directory and type: \\ \\ \texttt{gmake test} \\
+
+This will run all existing tests sequentially.  In the future it might
+be possible to choose just some of the tests, but this is currently
+not available.  There is a chance that the tests might fail when
+different compilers are used simply because of round-off errors, so
+always see that the differences reported are really significant (this
+can be minimized by adding the following line to the parameter file
+for the test: \\ \\
+\texttt{outtype = test} \\
+
+Whenever you add new parameters and options, it might be a good idea to
+add a new test to the code.  This is easy to do, just add a sample
+parameter file and the result of the run for that parameter file to
+the directory \texttt{testdata}. It is important to make sure that the
+output from the run is inside a directory that has the same name as
+the parameter file (without the extension \texttt{.par}), otherwise
+the testsuite won't find it.  Once this is done the Makefile will run
+the new test whenever the command \texttt{gmake test} is typed.
+
+
+\subsection{CVS}
+
+CVS stands for ``Concurrent Versions System'', and chances are you got
+this code through CVS so you already know what it is.  If you don't,
+CVS is a system for keeping well organized versions of a code
+developed by several people, by having the ``official version'' on a
+central repository and keeping track of all new changes. It is amazing
+how rapidly one looses track of what is the ``most up-to-date
+version'' of a multi-author code (or any multi-author files for that
+matter) without using something like CVS. \\
+
+If you add new routines to the code that you think might be useful for
+other users, it would be nice to add them to the CVS repository.  Just
+ask me if you need access to the repository (malcubi@nucleares.unam.mx).
+
+
+%%%%%%%%%%%%%%%%%%%%%%
+%%%   REFERENCES   %%%
+%%%%%%%%%%%%%%%%%%%%%%
+
+\addcontentsline{toc}{section}{References}
+
+\bibliographystyle{plain}
+\bibliography{bibtex/referencias}
+
+
+%%%%%%%%%%%%%%%
+%%%   END   %%%
+%%%%%%%%%%%%%%%
+
+\end{document}

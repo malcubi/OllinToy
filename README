@@ -1,0 +1,18 @@
+$Header: /usr/local/ollincvs/Codes/OllinToy/README,v 1.7 2005/03/17 18:35:33 malcubi Exp $
+
+********************************************
+***   README FILE FOR PROGRAM OLLINTOY   ***
+********************************************
+
+Code:   OllinToy
+Author: Miguel Alcubierre
+Date:   March, 2005
+
+This program solves the Einstein evolution equations in the case of
+1+1 dimensions and vacuum.  The documentation for the code is in the
+file "manual.pdf" inside the subdirectory "doc" (it is still
+incomplete).  If what you want is not there, or you want more detail,
+try looking at the source files directly, they are extensively
+commented.
+
+
